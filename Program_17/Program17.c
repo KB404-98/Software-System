@@ -1,7 +1,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
-#define FNAME "/home/saurabhv/Ss_Lab/io_files/17_ticket.txt"
 
 struct data{
 	int ticket;
