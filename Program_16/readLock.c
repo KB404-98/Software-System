@@ -1,4 +1,13 @@
-
+/*
+============================================================================
+Name : Program16a.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to perform mandatory locking.
+ a. Implement read lock
+Date: 25th Aug, 2023.
+============================================================================
+*/
 
 #include<unistd.h>
 #include<fcntl.h>
