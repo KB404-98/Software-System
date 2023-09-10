@@ -1,3 +1,4 @@
+<<comment
 ============================================================================
 Name : Program 1
 Author : Kuldip Nivruti Bhatale
@@ -6,6 +7,8 @@ Description : Create the following types of a files using shell command
  	a. hard link 
 Date: 25th Aug, 2023.
 ============================================================================
+comment
+
 
 #!/bin/bash
 
