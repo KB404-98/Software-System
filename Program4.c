@@ -4,7 +4,7 @@ Name : Program4.c
 Author : Kuldip Nivruti Bhatale
 Roll No : MT2023087
 Description : Write a program to open an existing file with read write mode. Try O_EXCL flag also. 
-Date: 22th Aug, 2023.
+Date: 25th Aug, 2023.
 Output : File name 4.txt is being opening(create if not exist)
 ==================================================================================================
 */
