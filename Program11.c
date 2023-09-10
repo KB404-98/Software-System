@@ -1,3 +1,18 @@
+/*
+=================================================================================================================
+Name : Program11.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023101
+Description : Write a program to open a file, duplicate the file descriptor and append the file with both the
+descriptors and check whether the file is updated properly or not.
+a. use dup
+b. use dup2
+c. use fcntl
+Date: 28th Aug, 2023.
+================================================================================================================
+*/
+
+
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
