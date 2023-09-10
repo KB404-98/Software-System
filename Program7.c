@@ -1,3 +1,13 @@
+/*
+============================================================================
+Name : Program7.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to copy from one file to other
+Date: 25th Aug, 2023.
+============================================================================
+*/
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -6,14 +16,14 @@
 int main(int argc, char* argv[]) {
         if(argc!=3)
         {
-                printf("You are useless\n");
+                printf("Incorrect number of arguments\n");
                 return -1;
         }
         int fd_read = open(argv[1], O_RDONLY);
         int fd_write = open(argv[2], O_WRONLY|O_CREAT);
 
         if(fd_read==-1 || fd_write==-1)
-                printf("Your system is useless\n");
+                printf("Error in opening files\n");
 
         // Logic
         while(1){
@@ -29,7 +39,7 @@ int main(int argc, char* argv[]) {
         int close_fd_write = close(fd_write);
 
         if(close_fd_read==-1 || close_fd_write==-1)
-                printf("Your system is useless, coz it can't even close a file\n");
+                printf("System is unable to close a file\n");
 
         return 0;
 
