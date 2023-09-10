@@ -1,3 +1,16 @@
+/*
+============================================================================
+Name : Program18-2.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to perform Record locking.
+ b. Implement write lock
+ 
+Date: 1st Sep, 2023.
+============================================================================
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,4 +54,6 @@ int main() {
 	}
 	return 0;
 }
+		
+		
 		
