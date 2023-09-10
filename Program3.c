@@ -1,4 +1,13 @@
-
+/*
+==============================================================================================================
+Name : Program3.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to create a file and print the file descriptor value. Use creat ( ) system call
+Date: 25th Aug, 2023.
+Output : File name 3.txt is created and on concole program prints File descriptor value of the file is = 3
+==============================================================================================================
+*/
 
 #include<stdio.h>
 #include<fcntl.h>
