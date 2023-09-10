@@ -1,27 +1,29 @@
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
+/*
+=================================================================================================================
+Name : Program5.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to create five new files with infinite loop. Execute the program in the background
+and check the file descriptor table at /proc/pid/fd 
+Date: 25th Aug, 2023.
+Output : run command as ls -l /proc/processid/fd
+=================================================================================================================
+*/
 
 
-int main() {
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
 
-    int fd1 = open("file1.txt", O_CREAT);
-    int fd2 = open("file2.txt", O_CREAT);
-    int fd3 = open("file3.txt", O_CREAT);
-    int fd4 = open("file4.txt", O_CREAT);
-    int fd5 = open("file5.txt", O_CREAT);
 
-    printf("%d %d %d %d %d\n", fd1, fd2, fd3, fd4, fd5);
-    printf("%d\n", getpid());
-
-    char c = getchar();
-
-    close(fd1);
-    close(fd2);
-    close(fd3);
-    close(fd4);
-    close(fd5);
-
-    return 0;
+int main()
+{
+	int fd1,fd2,fd3,fd4,fd5;
+	fd1=creat("file1",O_RDONLY);
+	fd2=creat("file2",O_RDONLY);
+	fd3=creat("file3",O_RDONLY);
+	fd4=creat("file4",O_RDONLY);
+	fd5=creat("file5",O_RDONLY);
+	for(;;);
 
 }
