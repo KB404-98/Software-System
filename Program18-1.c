@@ -1,3 +1,17 @@
+/*
+=============================================================================================================
+Name : Program18-1.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to perform Record locking.
+Create three records in a file. Whenever you access a particular record, first lock it then modify/access
+to avoid race condition.
+ 
+Date: 1st Sep, 2023.
+=============================================================================================================
+*/
+
+
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
