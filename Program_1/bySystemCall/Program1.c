@@ -1,4 +1,13 @@
-				
+============================================================================
+Name : Program 1
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Create the following types of a files using system calls
+	     a. soft link (symlink system call)
+	     b. hard link (link system call)
+	     c. FIFO (mkfifo Library Function or mknod system call)
+Date: 25th Aug, 2023.
+============================================================================				
 
 
 #include<stdio.h>
