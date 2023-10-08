@@ -1,3 +1,2 @@
-This is a SS Lab Repository...
-Hii.. My name is KB.
-Currently I am doing my masters from  IIIT Bangalore.
+This is a Software Systems Lab Repository.
+This repository contains Hands-On List-1 , Hands-On List-2 and SS Mini Project.
