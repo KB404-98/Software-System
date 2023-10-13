@@ -13,17 +13,164 @@
 #include "structure.h"
 
 
+
+
+
+
+/*-----------------------------ADD FACULTY---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+int addFaculty(int clientSocket) {
+    struct faculty f;
+
+    // Prompt and receive the Login Id
+    send(clientSocket, "Enter the Login Id of the Professor\n", strlen("Enter the Login Id of the Professor\n"), 0);
+    int bytesRead = recv(clientSocket, f.login_id, sizeof(f.login_id) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Login Id");
+        return false;
+    }
+    f.login_id[bytesRead] = '\0';
+
+    // Set the Password to "1234"
+    strcpy(f.password, "5678");
+
+    // Prompt and receive the Department
+    send(clientSocket, "Enter the Department of the Professor\n", strlen("Enter the Department of the Professor\n"), 0);
+    bytesRead = recv(clientSocket, f.dept, sizeof(f.dept) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Department");
+        return false;
+    }
+    f.dept[bytesRead] = '\0';
+
+    // Prompt and receive the Name
+    send(clientSocket, "Enter the Name of the Professor\n", strlen("Enter the Name of the Professor\n"), 0);
+    bytesRead = recv(clientSocket, f.name, sizeof(f.name) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Name");
+        return false;
+    }
+    f.name[bytesRead] = '\0';
+
+    // Prompt and receive the Age
+    send(clientSocket, "Enter the Age of Professor\n", strlen("Enter the Age of Professor\n"), 0);
+    bytesRead = recv(clientSocket, f.age, sizeof(f.age) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Age");
+        return false;
+    }
+    f.age[bytesRead] = '\0';
+
+    // Prompt and receive the Email
+    send(clientSocket, "Enter the Email of the Professor\n", strlen("Enter the Email of the Professor\n"), 0);
+    bytesRead = recv(clientSocket, f.email, sizeof(f.email) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Email");
+        return false;
+    }
+    f.email[bytesRead] = '\0';
+
+    // Open the file to enter this data in the database
+    int fd = open("faculty.txt", O_WRONLY | O_APPEND | O_CREAT, 0666); // Open the file in append mode
+
+    if (fd == -1) {
+        perror("Error opening the file");
+        return false;
+    }
+
+    // Use flock to apply a mandatory lock
+    if (flock(fd, LOCK_EX) == -1) {
+        perror("Error applying lock");
+        close(fd);
+        return false;
+    }
+
+    // Write the structure data to the file
+    if (write(fd, &f, sizeof(struct faculty)) == -1) {
+        perror("Error writing to the file");
+        flock(fd, LOCK_UN); // Release the lock before closing the file
+        close(fd);
+        send(clientSocket, "Failed to add Faculty\n", strlen("Failed to add Faculty\n"), 0);
+
+    }else{
+
+        flock(fd, LOCK_UN); // Release the lock
+        close(fd);          // Close the file
+        send(clientSocket, "Faculty added successfully\n", strlen("Faculty added successfully\n"), 0);
+
+    }
+    
+}
+
+
+
+
+/*------------------------------------VIEW FACULTY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+int viewFacultyDetails(int clientSocket) {
+
+    char duff[1024];
+    int fd = open("faculty.txt", O_RDONLY);
+    if (fd == -1) {
+        perror("Error opening the file");
+        return false;
+    }
+    int found = 0;
+    char loginID[10];
+
+    struct faculty f;
+
+    memset(loginID,0,sizeof(loginID));
+    
+    send(clientSocket, "Enter the Login Id of the Professor you want to display\n", strlen("Enter the Login Id of the Professor you want to display\n"), 0);
+    int bytesRead = recv(clientSocket, loginID, sizeof(loginID) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Login Id");
+        return false;
+    }
+    loginID[bytesRead] = '\0';
+ 
+    // Search for the faculty with the matching login ID
+    while (read(fd, &f, sizeof(struct faculty)) > 0) {
+        if (strcmp(loginID, f.login_id) == 0) {
+            
+            found = 1;
+            break;
+        }
+    }
+    memset(duff,0,sizeof(duff));
+
+    if(found){
+        // construct detailed message
+        sprintf(duff,"\n--Required Details of faculty--\nLogin ID:%s\nName:%s\nDept:%s\nAge:%s\nEmail:%s\n",f.login_id,f.name,f.dept,f.age,f.email);
+        send(clientSocket, duff, strlen(duff),0);
+        close(fd);
+        
+    }else{
+
+        send(clientSocket, "faculty not found..\n", strlen("faculty not found..\n"), 0);
+        close(fd);
+        
+    }
+     
+}
+
+
+
+/*-------------------------------------ADD STUDENT------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 int addStudent(int clientSocket) {
     struct student s;
 
     // Prompt and receive the Login Id
     send(clientSocket, "Enter the Login Id of the student you want to add\n", strlen("Enter the Login Id of the student you want to add\n"), 0);
-    int bytesRead = recv(clientSocket, s.login_id, sizeof(s.login_id) - 1, 0);
+    int bytesRead = recv(clientSocket, s.stud_id, sizeof(s.stud_id) - 1, 0);
     if (bytesRead <= 0) {
         perror("Error while receiving Login Id");
         return false;
     }
-    s.login_id[bytesRead] = '\0';
+    s.stud_id[bytesRead] = '\0';
 
     // Set the Password to "1234"
     strcpy(s.password, "1234");
@@ -98,6 +245,11 @@ int addStudent(int clientSocket) {
 
 
 
+
+
+/*----------------------------------VIEW STUDENT DETAILS----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
 int viewStudentDetails(int clientSocket) {
 
     char buff[1024];
@@ -120,13 +272,10 @@ int viewStudentDetails(int clientSocket) {
         return false;
     }
     loginID[bytesRead] = '\0';
-
-
-
-    
+ 
     // Search for the student with the matching login ID
     while (read(fd, &s, sizeof(struct student)) > 0) {
-        if (strcmp(loginID, s.login_id) == 0) {
+        if (strcmp(loginID, s.stud_id) == 0) {
             // Print student details when found
             found = 1;
             break;
@@ -136,7 +285,7 @@ int viewStudentDetails(int clientSocket) {
 
     if(found){
         // construct detailed message
-        sprintf(buff,"\n--Required Details of student--\nLogin ID:%s\nName:%s\nDept:%s\nAge:%s\nEmail:%s\n",s.login_id,s.name,s.dept,s.age,s.email);
+        sprintf(buff,"\n--Required Details of student--\nLogin ID:%s\nName:%s\nDept:%s\nAge:%s\nEmail:%s\n",s.stud_id,s.name,s.dept,s.age,s.email);
         send(clientSocket, buff, strlen(buff),0);
         close(fd);
         
@@ -151,6 +300,8 @@ int viewStudentDetails(int clientSocket) {
 
 
 
+
+/*--------------------------------------AUTHENTICATE ADMIN------------------------------------------------------------------------------------------------------------------------------------*/
 
 int admin_Authentication(int client_socket) {
     char username[100];
@@ -201,6 +352,14 @@ int admin_Authentication(int client_socket) {
     }
 }
 
+
+
+
+
+
+/*-------------------------------------ADMIN FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
 int admin_Fun(int client_socket) {
     // You can implement admin-specific functionality here
     // This function will be called after successful admin authentication
@@ -232,14 +391,18 @@ int admin_Fun(int client_socket) {
             case 2:
                 // View student details
                 viewStudentDetails(client_socket);
-
+                continue;
                 break;
 
             case 3:
+                // Add Faculty
+                addFaculty(client_socket);
 
                 break;
 
             case 4:
+                // View Faculty Details
+                viewFacultyDetails(client_socket);
 
                 break;
 
@@ -269,5 +432,5 @@ int admin_Fun(int client_socket) {
                 break;
         }
     }
-    return false;
+    
 }

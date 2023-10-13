@@ -109,22 +109,22 @@ void handleClient(int client_socket) {
     			}
                 break;
             case 2:
-                printf("HIII\n");
                 // Handle Professor role
                 // Implement the professor-related functionality here
+
+                
                 break;
             case 3:
                 // Handle Student role
                 // Implement the student-related functionality here
                 break;
             case 4:
-
-                break;
-            default:
-                char response[] = "You are Exiting Now !!.\n";
-                send(client_socket, response, strlen(response), 0);
-                close(client_socket);
+                
                 return;
+                
+            default:
+                send(client_socket, "Invalid choice. Try again.\n", strlen("Invalid choice. Try again.\n"), 0);
+                break;
         }
     }
     // Close the client socket
