@@ -32,6 +32,7 @@ int main() {
     printf("Successfully connected to the server\n");
 
     char buffer[BUFFER_SIZE];
+    
     while (1) {
         // Receive data from the server
         memset(buffer, 0, sizeof(buffer));
@@ -41,8 +42,9 @@ int main() {
             break;
         }
         // Process and display received data
+        
         printf("%s", buffer);
-
+        
         // Send a response
         char message[BUFFER_SIZE];
         memset(message,0,sizeof(message));

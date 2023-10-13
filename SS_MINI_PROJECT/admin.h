@@ -84,20 +84,23 @@ int addStudent(int clientSocket) {
         perror("Error writing to the file");
         flock(fd, LOCK_UN); // Release the lock before closing the file
         close(fd);
-        return false;
+        send(clientSocket, "Failed to add Student\n", strlen("Failed to add Student\n"), 0);
+
+    }else{
+
+        flock(fd, LOCK_UN); // Release the lock
+        close(fd);          // Close the file
+        send(clientSocket, "Student adeed successfully\n", strlen("Student adeed successfully\n"), 0);
+
     }
-
-    flock(fd, LOCK_UN); // Release the lock
-    close(fd);          // Close the file
-
-    return true;
+    
 }
 
 
 
 int viewStudentDetails(int clientSocket) {
 
-
+    char buff[1024];
     int fd = open("student.txt", O_RDONLY);
     if (fd == -1) {
         perror("Error opening the file");
@@ -125,23 +128,24 @@ int viewStudentDetails(int clientSocket) {
     while (read(fd, &s, sizeof(struct student)) > 0) {
         if (strcmp(loginID, s.login_id) == 0) {
             // Print student details when found
-
-            send(clientSocket, &s, sizeof(struct student), 0);
-
-           /* printf("Login ID: %s\n", s.login_id);
-            printf("Department: %s\n", s.dept);
-            printf("Name: %s\n", s.name);
-            printf("Age: %s\n", s.age);
-            printf("Email: %s\n", s.email);
-            close(fd); // Close the file before returning*/
-            return true;
+            found = 1;
+            break;
         }
     }
-    
+    memset(buff,0,sizeof(buff));
 
-     close(fd);
-     return false;
+    if(found){
+        // construct detailed message
+        sprintf(buff,"\n--Required Details of student--\nLogin ID:%s\nName:%s\nDept:%s\nAge:%s\nEmail:%s\n",s.login_id,s.name,s.dept,s.age,s.email);
+        send(clientSocket, buff, strlen(buff),0);
+        close(fd);
+        
+    }else{
 
+        send(clientSocket, "Student not found..\n", strlen("Student not found..\n"), 0);
+        close(fd);
+        
+    }
      
 }
 
@@ -203,7 +207,7 @@ int admin_Fun(int client_socket) {
     // Add your code to handle admin tasks, menu options, etc.
     // For example, sending admin menu options and processing admin tasks
 
-    char admin_Menu[] = "\nAdmin Menu:\n1. Add Student\n2. View Student Details\n3. Add Faculty\n4. View Faculty Details\n5. Activate Student\n6. Block Student\n7. Update Student Details\n8. Update Faculty Details\n9. Exit\n";
+    char admin_Menu[] = "\nAdmin Menu:\n1. Add Student\n2. View Student Details\n3. Add Faculty\n4. View Faculty Details\n5. Activate Student\n6. Block Student\n7. Update Student Details\n8. Update Faculty Details\n9. Exit\nEnter Choice\n";
 
     while (1) {
         send(client_socket, admin_Menu, strlen(admin_Menu), 0);
@@ -222,20 +226,12 @@ int admin_Fun(int client_socket) {
         switch (choice) {
             case 1:
                 // Add Student
-                if (addStudent(client_socket)) {
-                    send(client_socket, "Student adeed successfully\n", strlen("Student adeed successfully\n"), 0);
-                }else{
-                    send(client_socket, "Failed to add Student\n", strlen("Failed to add Student\n"), 0);
-                }
+                addStudent(client_socket); 
                 break;
 
             case 2:
                 // View student details
-                if(!viewStudentDetails(client_socket)){
-
-                    send(client_socket, "Student not found..\n", strlen("Student not found..\n"), 0);
-                    
-                }
+                viewStudentDetails(client_socket);
 
                 break;
 
@@ -265,7 +261,7 @@ int admin_Fun(int client_socket) {
 
             case 9:
                 // Exit admin functionality
-                
+                return true;
 
             default:
                 // Handle invalid options

@@ -14,3 +14,9 @@ struct student
     char age[3];
     char email[25];
 };
+
+struct faculty
+{
+
+
+};

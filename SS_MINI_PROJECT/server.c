@@ -101,6 +101,7 @@ void handleClient(int client_socket) {
                 // Implement the admin-related functionality here
 				if (admin_Authentication(client_socket)) {
         			admin_Fun(client_socket);
+                    
     			} else {
         			send(client_socket, "Admin authentication failed. Exiting.\n", strlen("Admin authentication failed. Exiting.\n"), 0);
        				close(client_socket);
@@ -108,6 +109,7 @@ void handleClient(int client_socket) {
     			}
                 break;
             case 2:
+                printf("HIII\n");
                 // Handle Professor role
                 // Implement the professor-related functionality here
                 break;
@@ -119,8 +121,8 @@ void handleClient(int client_socket) {
 
                 break;
             default:
-                char response4[] = "You are Exiting Now !!.\n";
-                send(client_socket, response4, strlen(response4), 0);
+                char response[] = "You are Exiting Now !!.\n";
+                send(client_socket, response, strlen(response), 0);
                 close(client_socket);
                 return;
         }
