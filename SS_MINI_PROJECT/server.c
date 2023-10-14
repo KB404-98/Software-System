@@ -7,7 +7,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "admin.h"
-
+#include "faculty.h"
+#include "student.h"
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
@@ -100,27 +101,28 @@ void handleClient(int client_socket) {
                 // Handle Admin role
                 // Implement the admin-related functionality here
 				if (admin_Authentication(client_socket)) {
-        			admin_Fun(client_socket);
-                    
-    			} else {
-        			send(client_socket, "Admin authentication failed. Exiting.\n", strlen("Admin authentication failed. Exiting.\n"), 0);
-       				close(client_socket);
-       				return;
-    			}
+        		        admin_Fun(client_socket);
+                }
                 break;
             case 2:
-                // Handle Professor role
-                // Implement the professor-related functionality here
-
-                
+                if (faculty_Authentication(client_socket)) {
+        			faculty_Fun(client_socket);
+                }
                 break;
             case 3:
                 // Handle Student role
                 // Implement the student-related functionality here
+                 if (student_Authentication(client_socket)) {
+        			student_Fun(client_socket);
+                }
                 break;
             case 4:
                 
-                return;
+                char response[] = "You are Exiting Now !!.\n";
+			    send(client_socket, response, strlen(response), 0);
+			    printf("Client gets Exited");
+			    close(client_socket);
+			return;
                 
             default:
                 send(client_socket, "Invalid choice. Try again.\n", strlen("Invalid choice. Try again.\n"), 0);

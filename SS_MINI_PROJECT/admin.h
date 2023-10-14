@@ -105,7 +105,7 @@ int addFaculty(int clientSocket) {
 
 
 
-/*------------------------------------VIEW FACULTY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*-----------------------------VIEW FACULTY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 int viewFacultyDetails(int clientSocket) {
@@ -158,7 +158,7 @@ int viewFacultyDetails(int clientSocket) {
 
 
 
-/*-------------------------------------ADD STUDENT------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------ADD STUDENT------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 int addStudent(int clientSocket) {
     struct student s;
@@ -247,7 +247,7 @@ int addStudent(int clientSocket) {
 
 
 
-/*----------------------------------VIEW STUDENT DETAILS----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*-------------------------------VIEW STUDENT DETAILS----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 int viewStudentDetails(int clientSocket) {
@@ -301,7 +301,241 @@ int viewStudentDetails(int clientSocket) {
 
 
 
-/*--------------------------------------AUTHENTICATE ADMIN------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
+
+
+/*--------------------------------UPDATE STUDENT DETAILS----------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+int updateStudDetails(int clientSocket){
+    struct student my_student, temp;
+    int fd = open("student.txt", O_RDWR, 0644); // Open in read-only mode
+    struct flock lock;
+    if (fd == -1)
+    {
+        perror("Error opening file");
+        return 0;
+    }
+    bool found = false; // Initialize found to false
+    char buffer[1024];  // Declare buffer for sending data
+    send(clientSocket, "Enter Student ID for updation of data: ", strlen("Enter Student ID for updation of data: "), 0);
+    int readResult = read(clientSocket, my_student.stud_id, sizeof(my_student.stud_id) - 1);
+
+    if (readResult <= 0)
+    {
+        send(clientSocket, "Error receiving student ID from server", strlen("Error receiving student ID from server"), 0);
+        return 0;
+    }
+    my_student.stud_id[readResult] = '\0';
+
+    // Reset the file pointer to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    // Loop to search for the student in the file
+    while (read(fd, &temp, sizeof(temp)) > 0)
+    {
+        if (strcmp(my_student.stud_id, temp.stud_id) == 0)
+        { // Compare the student IDs
+            found = true;
+            
+            lock.l_type = F_WRLCK;  // Write (exclusive) lock
+            lock.l_whence = SEEK_SET;
+            lock.l_start = lseek(fd, 0, SEEK_CUR) - sizeof(struct student); // Position lock at the current record
+            lock.l_len = sizeof(struct student);
+
+            if (fcntl(fd, F_SETLKW, &lock) == -1)
+            {
+                perror("Error locking file");
+                lock.l_type = F_UNLCK;
+                fcntl(fd, F_SETLK, &lock);
+                close(fd);
+                return 0;
+            }
+            break;
+        }
+    }
+    if (found)
+    {
+
+        // Construct the details message
+        sprintf(buffer, "...................Student..................\n...................Original Details ..................\nName: %s\nAge: %s\nLogin ID: %s\nPassword: %s\nEmail Address: %s\n.............................................\n",
+                temp.name, temp.age, temp.stud_id, temp.password,temp.email);
+
+        // Send the details to the client
+        send(clientSocket, buffer, strlen(buffer), 0);
+        
+        struct student up_stud;
+        strcpy(up_stud.stud_id, temp.stud_id);
+
+        send(clientSocket, "Enter Student Name to update: ", strlen("Enter Student Name to update: "), 0);
+        readResult = read(clientSocket, up_stud.name, sizeof(up_stud.name) - 1);
+        up_stud.name[readResult]='\0';
+
+        send(clientSocket, "Enter password to update: ", strlen("Enter password to update: "), 0);
+        readResult = read(clientSocket, up_stud.password, sizeof(up_stud.password) - 1);
+        up_stud.password[readResult]='\0';
+
+        send(clientSocket, "Enter Age to update: ", strlen("Enter Age to update: "), 0);
+        readResult = read(clientSocket, up_stud.age, sizeof(up_stud.age) - 1);
+        up_stud.age[readResult]='\0';
+
+        send(clientSocket, "Enter Email Address to update: ", strlen("Enter Email Address to update: "), 0);
+        readResult = read(clientSocket, up_stud.email, sizeof(up_stud.email) - 1);
+        up_stud.email[readResult]='\0';
+
+        lseek(fd,-sizeof(struct student),SEEK_CUR); //// Move the file pointer back to the beginning of the current record
+        write(fd,&up_stud,sizeof(up_stud));// Overwrite the entire record with the updated data
+
+        sprintf(buffer, "...................Student..................\n...................Updated Details ..................\nName: %s\nAge: %s\nLogin ID: %s\nPassword: %s\nEmail Address: %s\n.............................................\n",
+                up_stud.name, up_stud.age, up_stud.stud_id, up_stud.password,up_stud.email);
+        
+        // Send the details to the client
+        send(clientSocket, buffer, strlen(buffer), 0);
+        //struct flock unlock;
+        lock.l_type = F_UNLCK;
+        lock.l_whence = SEEK_SET;
+        lock.l_start = lock.l_start;
+        lock.l_len = lock.l_len;
+        fcntl(fd, F_SETLK, &lock);
+        close(fd);
+
+        send(clientSocket, "Student Updated Successfully\n", strlen("Student Updated Successfully\n"), 0);
+
+    }
+    else
+    {
+        send(clientSocket, "Student not found\n", strlen("Student not found\n"), 0);
+        lock.l_type = F_UNLCK;
+        fcntl(fd, F_SETLK, &lock);
+        close(fd);
+        
+    }
+    close(fd);
+     // Close the file after use
+}
+
+
+
+/*-------------------------------UPDATE FACULTY DETAILS--------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
+int updateFacDetails(int clientSocket){
+    struct faculty my_faculty, temp;
+    int fd = open("faculty.txt", O_RDWR, 0644); // Open in read-only mode
+    struct flock lock;
+    if (fd == -1)
+    {
+        perror("Error opening file");
+        return 0;
+    }
+    bool found = false; // Initialize found to false
+    char buffer[1024];  // Declare buffer for sending data
+    send(clientSocket, "Enter Professor ID for updation of data: ", strlen("Enter Professor ID for updation of data: "), 0);
+    int readResult = read(clientSocket, my_faculty.login_id, sizeof(my_faculty.login_id) - 1);
+
+    if (readResult <= 0)
+    {
+        send(clientSocket, "Error receiving student ID from server", strlen("Error receiving student ID from server"), 0);
+        return 0;
+    }
+    my_faculty.login_id[readResult] = '\0';
+
+    // Reset the file pointer to the beginning of the file
+    lseek(fd, 0, SEEK_SET);
+
+    // Loop to search for the student in the file
+    while (read(fd, &temp, sizeof(temp)) > 0)
+    {
+        if (strcmp(my_faculty.login_id, temp.login_id) == 0)
+        { // Compare the student IDs
+            found = true;
+            
+            lock.l_type = F_WRLCK;  // Write (exclusive) lock
+            lock.l_whence = SEEK_SET;
+            lock.l_start = lseek(fd, 0, SEEK_CUR) - sizeof(struct faculty); // Position lock at the current record
+            lock.l_len = sizeof(struct faculty);
+
+            if (fcntl(fd, F_SETLKW, &lock) == -1)
+            {
+                perror("Error locking file");
+                lock.l_type = F_UNLCK;
+                fcntl(fd, F_SETLK, &lock);
+                close(fd);
+                return 0;
+            }
+            break;
+        }
+    }
+    if (found)
+    {
+
+        // Construct the details message
+        sprintf(buffer, "...................Professor..................\n...................Original Details ..................\nLogin ID:%s\nName:%s\nDept:%s\nAge:%s\nPassword:%s\nEmail:%s\n.............................................\n",
+                temp.login_id,temp.name,temp.dept,temp.age,temp.password,temp.email);
+
+        // Send the details to the client
+        send(clientSocket, buffer, strlen(buffer), 0);
+        
+        struct faculty up_fac;
+        strcpy(up_fac.login_id, temp.login_id);
+
+        send(clientSocket, "Enter Professor Name to update: ", strlen("Enter Professor Name to update: "), 0);
+        readResult = read(clientSocket, up_fac.name, sizeof(up_fac.name) - 1);
+        up_fac.name[readResult]='\0';
+
+        send(clientSocket, "Enter password to update: ", strlen("Enter password to update: "), 0);
+        readResult = read(clientSocket, up_fac.password, sizeof(up_fac.password) - 1);
+        up_fac.password[readResult]='\0';
+
+        send(clientSocket, "Enter Age to update: ", strlen("Enter Age to update: "), 0);
+        readResult = read(clientSocket, up_fac.age, sizeof(up_fac.age) - 1);
+        up_fac.age[readResult]='\0';
+
+        send(clientSocket, "Enter Email Address to update: ", strlen("Enter Email Address to update: "), 0);
+        readResult = read(clientSocket, up_fac.email, sizeof(up_fac.email) - 1);
+        up_fac.email[readResult]='\0';
+
+        send(clientSocket, "Enter Department to update: ", strlen("Enter Department to update: "), 0);
+        readResult = read(clientSocket, up_fac.dept, sizeof(up_fac.dept) - 1);
+        up_fac.dept[readResult]='\0';
+
+        lseek(fd,-sizeof(struct student),SEEK_CUR); //// Move the file pointer back to the beginning of the current record
+        write(fd,&up_fac,sizeof(up_fac));// Overwrite the entire record with the updated data
+
+        sprintf(buffer, "...................Professor..................\n...................Updated Details ..................\nLogin ID:%s\nName:%s\nDept:%s\nAge:%s\nPassword:%s\nEmail:%s\n.............................................\n",
+                up_fac.login_id,up_fac.name,up_fac.dept,up_fac.age,up_fac.password,up_fac.email);
+        
+        // Send the details to the client
+        send(clientSocket, buffer, strlen(buffer), 0);
+        //struct flock unlock;
+        lock.l_type = F_UNLCK;
+        lock.l_whence = SEEK_SET;
+        lock.l_start = lock.l_start;
+        lock.l_len = lock.l_len;
+        fcntl(fd, F_SETLK, &lock);
+        close(fd);
+
+        send(clientSocket, "Student Updated Successfully\n", strlen("Student Updated Successfully\n"), 0);
+
+    }
+    else
+    {
+        send(clientSocket, "Student not found\n", strlen("Student not found\n"), 0);
+        lock.l_type = F_UNLCK;
+        fcntl(fd, F_SETLK, &lock);
+        close(fd);
+        
+    }
+    close(fd);
+     // Close the file after use
+}
+
+
+
+/*--------------------------------AUTHENTICATE ADMIN------------------------------------------------------------------------------------------------------------------------------------*/
 
 int admin_Authentication(int client_socket) {
     char username[100];
@@ -343,12 +577,12 @@ int admin_Authentication(int client_socket) {
     if (strcmp(username, adminCred.username) == 0 && strcmp(pass, adminCred.pass) == 0) {
         // Authentication successful
         send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
-        return true;
+        
     } else {
         // Authentication failed
         send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
         close(client_socket);
-        return false;
+        
     }
 }
 
@@ -357,7 +591,7 @@ int admin_Authentication(int client_socket) {
 
 
 
-/*-------------------------------------ADMIN FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*---------------------------------ADMIN FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 int admin_Fun(int client_socket) {
@@ -366,7 +600,7 @@ int admin_Fun(int client_socket) {
     // Add your code to handle admin tasks, menu options, etc.
     // For example, sending admin menu options and processing admin tasks
 
-    char admin_Menu[] = "\nAdmin Menu:\n1. Add Student\n2. View Student Details\n3. Add Faculty\n4. View Faculty Details\n5. Activate Student\n6. Block Student\n7. Update Student Details\n8. Update Faculty Details\n9. Exit\nEnter Choice\n";
+    char admin_Menu[] = "\nAdmin Menu:\n1. Add Student\n2. View Student Details\n3. Add Faculty\n4. View Faculty Details\n5. Update Student Details\n6. Update Faculty Details\n7. Exit\nEnter Choice\n";
 
     while (1) {
         send(client_socket, admin_Menu, strlen(admin_Menu), 0);
@@ -407,22 +641,16 @@ int admin_Fun(int client_socket) {
                 break;
 
             case 5:
-
+                //Update Students details
+                updateStudDetails(client_socket);
                 break;
 
             case 6:
-
+                //Update Faculty Details
+                updateFacDetails(client_socket);
                 break;
 
             case 7:
-
-                break;
-
-            case 8:
-
-                break;
-
-            case 9:
                 // Exit admin functionality
                 return true;
 

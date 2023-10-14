@@ -45,7 +45,7 @@ int main() {
 
         // Send a response (optional)
         char message[1024];
-        printf("\n>");
+        printf(">");
         memset(message, 0, sizeof(message));
         fgets(message, sizeof(message), stdin);
 
