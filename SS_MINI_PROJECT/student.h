@@ -197,6 +197,83 @@ void drop(int clientSocket) {
 
 
 
+/*---------------------------UPDATE PASSWORD------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
+int updatePassword(int clientSocket) {
+    char buff[1024];
+    int fd = open("student.txt", O_RDWR); // Open the file for both reading and writing
+    if (fd == -1) {
+        perror("Error opening the file");
+        return false;
+    }
+
+    int found = 0;
+    char studID[50];
+    char newPass[10];
+    struct student s;
+
+    memset(studID, 0, sizeof(studID));
+
+    send(clientSocket, "Enter Your Student ID: ", strlen("Enter Your Student ID: "), 0);
+    int bytesRead = recv(clientSocket, studID, sizeof(studID) - 1, 0);
+    if (bytesRead <= 0) {
+        perror("Error while receiving Login ID");
+        close(fd); // Close the file
+        return false;
+    }
+    studID[bytesRead] = '\0';
+
+    // Search for the faculty with the matching login ID
+    while (read(fd, &s, sizeof(struct student)) > 0) {
+        if (strcmp(studID, s.stud_id) == 0) {
+            found = 1;
+            break;
+        }
+    }
+
+    if (found) {
+        // Send a prompt for the new password
+        send(clientSocket, "Enter New Password: ", strlen("Enter New Password: "), 0);
+        bytesRead = recv(clientSocket, newPass, sizeof(newPass) - 1, 0);
+        if (bytesRead <= 0) {
+            perror("Error while receiving new password");
+            close(fd); // Close the file
+            return false;
+        }
+        newPass[bytesRead] = '\0';
+
+        // Update the Student password
+        strcpy(s.password, newPass);
+
+        // Seek back to the beginning of the faculty record
+        lseek(fd, -sizeof(struct student), SEEK_CUR);
+
+        // Write the updated faculty data to the file
+        if (write(fd, &s, sizeof(struct student)) == -1) {
+            perror("Error writing to the file");
+            send(clientSocket, "Failed to update Password.\n", strlen("Failed to update Password.\n"), 0);
+
+            close(fd); // Close the file
+            
+        }
+        close(fd); // Close the file
+        send(clientSocket, "Password updated successfully.\n", strlen("Password updated successfully.\n"), 0);
+       
+    } else {
+        send(clientSocket, "Faculty not found.\n", strlen("Faculty not found.\n"), 0);
+        close(fd); // Close the file
+        
+    }
+}
+
+
+
+
+
+
+
 
 
 
@@ -323,11 +400,12 @@ int student_Fun(int client_socket) {
 
             case 4:
                 //View Enrolled Course Details
-                //updatePass(client_socket);
-
+                
                 break;
             case 5:
                 //Change Password
+                updatePassword(client_socket);
+
                 break;
             case 6:
                 // Exit admin functionality
