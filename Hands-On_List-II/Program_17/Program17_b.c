@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram17_b.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to execute ls -l | wc b. use dup2
+Date: 8th Oct, 2023.
+=====================================================================================================================================
+*/	
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

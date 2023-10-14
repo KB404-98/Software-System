@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram21_write.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write two programs so that both can communicate by FIFO -Use two way communications.
+Date: 9th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>

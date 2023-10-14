@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram30_cd.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to create a shared memory. c. detach the shared memory d. remove the shared memory
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>

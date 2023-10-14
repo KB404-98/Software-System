@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram30_b.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to create a shared memory. b. attach with O_RDONLY and check whether you are able to overwrite.
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

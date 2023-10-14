@@ -1,3 +1,14 @@
+/*
+=====================================================================================================================================
+Name : Progaram26.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to send messages to the message queue. Check $ipcs -q
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

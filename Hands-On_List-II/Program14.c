@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram14.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a simple program to create a pipe, write to the pipe, read from pipe and display on the monitor.
+Date: 8th Oct, 2023.
+=====================================================================================================================================
+*/	
 
 #include<stdio.h>
 #include<unistd.h>

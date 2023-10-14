@@ -1,4 +1,12 @@
-
+/*
+=====================================================================================================================================
+Name : Progaram15.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a simple program to send some data from parent to the child process.
+Date: 8th Oct, 2023.
+=====================================================================================================================================
+*/	
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>

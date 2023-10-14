@@ -1,3 +1,13 @@
+/*
+=====================================================================================================================================
+Name : Progaram22_read.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to wait for data to be written into FIFO within 10 seconds, use select system call with FIFO..
+Date: 9th Oct, 2023.
+=====================================================================================================================================
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>

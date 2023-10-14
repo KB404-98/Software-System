@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram24.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to create a message queue and print the key and message queue id.
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ipc.h>

@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram29.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to remove the message queue.
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>

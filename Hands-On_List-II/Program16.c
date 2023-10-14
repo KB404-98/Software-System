@@ -1,4 +1,12 @@
-
+/*
+=====================================================================================================================================
+Name : Progaram16.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description : Write a program to send and receive data from parent to child vice versa. Use two way communication.
+Date: 8th Oct, 2023.
+=====================================================================================================================================
+*/	
 #include<stdio.h>
 #include<unistd.h>
 #include<errno.h>

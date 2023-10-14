@@ -1,4 +1,12 @@
-
+/*
+=====================================================================================================================================
+Name : Progaram31_a.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to create a semaphore and initialize value to the semaphore. a. create a binary semaphore
+Date: 13th Oct, 2023.
+=====================================================================================================================================
+*/
 
 #include <sys/types.h> 
 #include <sys/ipc.h>   

@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram23.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to print the maximum number of files can be opened within a process and size of a pipe (circular buffer).
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

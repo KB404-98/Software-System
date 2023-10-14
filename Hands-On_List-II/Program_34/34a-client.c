@@ -1,4 +1,12 @@
-
+/*
+=====================================================================================================================================
+Name : Progaram34_ac.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to create a concurrent server. a. use fork
+Date: 13th Oct, 2023.
+=====================================================================================================================================
+*/
 
 #include <sys/types.h>  
 #include <sys/socket.h> 

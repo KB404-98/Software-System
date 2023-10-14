@@ -1,30 +1,31 @@
+
 /*
 =====================================================================================================================================
-Name : Progaram33_a.c
+Name : Progaram34_bc.c
 Author : Kuldip Nivruti Bhatale
 Roll No : MT2023087
-Description :Write a program to communicate between two machines using socket.
+Description :Write a program to create a concurrent server. a. use pthread
 Date: 13th Oct, 2023.
 =====================================================================================================================================
 */
-
-#include <sys/types.h>  
-#include <sys/socket.h> 
-#include <netinet/ip.h> 
-#include <stdio.h>      
-#include <unistd.h>     
+#include <sys/types.h>  // Import for `socket`, `connect`
+#include <sys/socket.h> // Import for `socket`, `connect`
+#include <netinet/ip.h> // Import for `struct sockaddr_in`, `htons`
+#include <stdio.h>      // Import for `perror` & `printf`
+#include <unistd.h>     // Import for `_exit`, `read`, write`
 
 void main()
 {
-    int socketFileDescriptor; 
-    int connectStatus;        
+    int socketFileDescriptor; // File descriptor that will be used for communication via socket
+    int connectStatus;        // Determines success of `connect` call
 
-    struct sockaddr_in address; 
+    struct sockaddr_in address; // Holds the address of the server to communicate
 
-    ssize_t readBytes, writeBytes; 
+    ssize_t readBytes, writeBytes; // Number of bytes read from / written to the network via socket
     char dataFromServer[100];
 
-    
+    // Create an endpoint for communicate -> here, create the client side point
+    // Create a socket for TCP connection using IPv4
     socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
     if (socketFileDescriptor == -1)
     {
@@ -33,7 +34,7 @@ void main()
     }
     printf("Client side socket successfully created!\n");
 
-    
+    // Defined server's details
     address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_family = AF_INET;
     address.sin_port = htons(8080);
@@ -44,10 +45,9 @@ void main()
         perror("Error while connecting to server!");
         _exit(0);
     }
-    printf("Client to server connection successfully established!\n");
+    printf("Client to serrver connection successfully established!\n");
 
-   
-   
+    // ========================= Client - Server communication =================
 
     readBytes = read(socketFileDescriptor, dataFromServer, 100);
     ;
@@ -62,7 +62,9 @@ void main()
     else
         printf("Data sent to server!");
 
-   
+    getchar();
+    
+    // =======================================================================
 
     close(socketFileDescriptor);
 }

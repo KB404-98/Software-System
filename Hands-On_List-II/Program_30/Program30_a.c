@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram30_a.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to create a shared memory. a. write some data to the shared memory
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

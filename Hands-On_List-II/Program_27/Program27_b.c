@@ -1,3 +1,14 @@
+/*
+=====================================================================================================================================
+Name : Progaram27_b.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to receive messages from the message queue.
+	     a. with 0 as a flag
+	     b. with IPC_NOWAIT as a flag
+Date: 10th Oct, 2023.
+=====================================================================================================================================
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,12 @@
+/*
+=====================================================================================================================================
+Name : Progaram33_b.c
+Author : Kuldip Nivruti Bhatale
+Roll No : MT2023087
+Description :Write a program to communicate between two machines using socket.
+Date: 13th Oct, 2023.
+=====================================================================================================================================
+*/
 
 
 #include <sys/types.h>  
