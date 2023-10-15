@@ -58,142 +58,383 @@ int viewAllCourses(int clientSocket) {
 /*-----------------------------ENROLL A NEW COURSE----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-void enroll(int clientSocket) {
-    struct course course_record;
-
-    // Open the courses.txt file for reading and writing
-    int fd = open("course.txt", O_RDWR);
-    if (fd == -1) {
-        perror("Error opening the file");
-        return;
-    }
+void enroll(int clientSocket,char* auth) {
+    
+    char studID[10];
     char courseID[10];
+    
+    strcpy(studID,auth);
+
+    struct enroll e;
+
+   
+    struct course course_record;
+     memset(e.stud_id,0,sizeof(e.stud_id));
+     memset(e.course_id[0],'\0',sizeof(e.course_id[0]));
+     memset(e.course_id[1],'\0',sizeof(e.course_id[1]));
+
+
+    int cfound=0, sfound=0;
+    int p = 1;
+    int canenroll = 0;
+    int numEnrollments = 0;
 
     send(clientSocket, "Enter the Course ID\n", strlen("Enter the Course ID\n"), 0);
-    int bytesRead = recv(clientSocket, courseID, sizeof(courseID) - 1, 0);
-    if (bytesRead <= 0) {
-        perror("Error while receiving Login Id");
-        return ;
-    }
-    courseID[bytesRead] = '\0';
-    int found = 0;
-
-    // Apply mandatory file lock
-    if (flock(fd, LOCK_EX) == -1) {
-        perror("Error applying lock");
-        close(fd);
-        return;
-    }
-
-    // Search for the course with the matching ID
-    while (read(fd, &course_record, sizeof(struct course)) > 0) {
-        if (strcmp(courseID, course_record.course_id) == 0) {
-            found = 1;
-            break;
+        int bytesRead = recv(clientSocket, courseID, sizeof(courseID) - 1, 0);
+        if (bytesRead <= 0) {
+            perror("Error while receiving Login Id");
+            return ;
         }
-    }
+        courseID[bytesRead] = '\0';
 
-    if (found) {
-        // Check if there are available seats
-        int avail_seats = atoi(course_record.avail_seats);
-        if (avail_seats > 0) {
-            // Enroll the student (decrement available seats)
-            avail_seats--;
-            snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
+        
+        // Open the courses.txt file for reading and writing
+        int fd2 = open("course.txt", O_RDWR);
+        if (fd2 == -1) {
+            perror("Error opening the file");
+            return;
+        }
 
-            // Seek back to the beginning of the course record
-            lseek(fd, -sizeof(struct course), SEEK_CUR);
+        while (read(fd2, &course_record, sizeof(struct course)) > 0) {
+            if (strcmp(courseID,course_record.course_id ) == 0) {
+                 cfound = 1;
+                 break;
+             }  
+        }     
+        
+        if(cfound){
+            // Check if there are available seats
+            int avail_seats = atoi(course_record.avail_seats);
+            
+            
+            if (avail_seats > 0) {
+            
+            	 // Open the enrollment.txt to check if student already enrolled for any course or not
+    		int fd1 = open("enrollment.txt", O_RDWR | O_CREAT, 0666); // Open the file in append mode
 
-            // Write the updated course data back to the file
-            if (write(fd, &course_record, sizeof(struct course)) == -1) {
-                perror("Error writing to the file");
-            } else {
-                send(clientSocket, "Enrollment successful\n", strlen("Enrollment successful\n"), 0);
+    		if (fd1 == -1) {
+       			perror("Error opening the file");
+       			return ;
+    		}
+    		
+    		 while (read(fd1, &e, sizeof(struct enroll)) > 0) {
+	       		 if (strcmp(studID, e.stud_id) == 0) {
+		    		sfound = 1;
+		    		p = 0;
+		   		break;
+	       		 }
+   	 	}
+            
+        if(sfound){
+            
+
+            for (int i = 0; i < 2; i++) {
+                if (strcmp(e.course_id[i], courseID) == 0) {
+                   
+                        send(clientSocket, "You are already enrolled in this course.\n", strlen("You are already enrolled in this course.\n"), 0);
+                        return;
+                    
+                }
             }
-        } else {
-            send(clientSocket, "No available seats for this course\n", strlen("No available seats for this course\n"), 0);
-        }
-    } else {
-        send(clientSocket, "Course not found\n", strlen("Course not found\n"), 0);
-    }
+        
+       		for (int i = 0; i < 2; i++){
+           		if (strcmp(e.course_id[i], "") != 0){
+                	numEnrollments++;
+            	}
+        	}
 
-    flock(fd, LOCK_UN);
-    // Close the file
-    close(fd);
+        	if (numEnrollments < 2)
+        	{
+                 // Enroll the student (decrement available seats)
+                 avail_seats--;
+                 snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
+
+                // Seek back to the beginning of the course record
+                lseek(fd2, -sizeof(struct course), SEEK_CUR);
+
+                    // Write the updated course data back to the file
+                if (write(fd2, &course_record, sizeof(struct course)) == -1) {
+                    perror("Error writing to the file");
+                    send(clientSocket, "Error Updating course.txt\n", strlen("Error Updating course.txt\n"), 0);
+
+                    return;
+
+                } else {
+                
+                    for (int i = 0; i < 2; i++) {
+                         if (strcmp(e.course_id[i], "") == 0) {
+                             strcpy(e.course_id[i], courseID);
+                                break;
+                        }
+                    }
+
+                        
+                    lseek(fd1, -sizeof(struct enroll), SEEK_CUR);
+                    if (write(fd1, &e, sizeof(struct enroll)) == -1) {
+                        perror("Error writing to the file");
+                            send(clientSocket, "Error Updating enrollment.txt\n", strlen("Error Updating enrollment.txt\n"), 0);
+                            return;
+                    }
+                        
+                        
+                    send(clientSocket, "Enrollment successful\n", strlen("Enrollment successful\n"), 0);
+                    memset(studID,0,sizeof(studID));
+                    memset(courseID,0,sizeof(courseID));
+
+                }
+        			
+        
+            
+       		}else{
+       			
+            	send(clientSocket, "Student have already enrolled in the maximum allowed courses\n", strlen("Student have already enrolled in the maximum allowed courses\n"), 0);
+                return;
+
+        	}
+   		}else{
+
+                memset(e.stud_id,0,sizeof(e.stud_id));
+                memset(e.course_id[0],'\0',sizeof(e.course_id[0]));
+                memset(e.course_id[1],'\0',sizeof(e.course_id[1]));
+
+   		 
+   		 	    strcpy(e.stud_id, studID);
+        		strcpy(e.course_id[0],courseID);
+                strcpy(e.course_id[1],"");
+
+
+
+        		
+                 // Seek back to the beginning of the course record
+                   // lseek(fd2, -sizeof(struct course), SEEK_CUR);
+
+        		if (write(fd1, &e, sizeof(struct enroll)) == -1) {
+         			perror("Error writing to the file");
+          		  	send(clientSocket, "Error adding student enrollment\n", strlen("Error adding student enrollment\n"), 0);
+          		  	close(fd1);
+           		 	return;
+        		}else{
+        		
+
+        			 // Enroll the student (decrement available seats)
+                		avail_seats--;
+                		snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
+
+               			 // Seek back to the beginning of the course record
+               			 lseek(fd2, -sizeof(struct course), SEEK_CUR);
+
+               			 // Write the updated course data back to the file
+                		if (write(fd2, &course_record, sizeof(struct course)) == -1) {
+                   		 perror("Error writing to the file");
+                   		 send(clientSocket, "Error Updating course.txt\n", strlen("Error Updating course.txt\n"), 0);
+
+                    		return;
+
+                		} else{
+                	
+                	        	send(clientSocket, "First Enrollment successful\n", strlen("First Enrollment successful\n"), 0);
+                                memset(studID,0,sizeof(studID));
+                                memset(courseID,0,sizeof(courseID));
+	
+                		}
+        		
+        		}
+        		
+        		
+        		
+        		
+
+		}
+            
+            
+    }else {
+        send(clientSocket, "No available seats for this course\n", strlen("No available seats for this course\n"), 0);
+    }
+            
+}else{
+    send(clientSocket, "Course not found\n", strlen("Course not found\n"), 0);
+
 }
+   
+
+
+   
+
+   
+    
+}
+
+
+
+
+
 
 
 
 
 /*-------------------------DROP A COURSE----------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void drop(int clientSocket) {
-    struct course course_record;
-
-    // Open the courses.txt file for reading and writing
-    int fd = open("course.txt", O_RDWR);
-    if (fd == -1) {
-        perror("Error opening the file");
-        return;
-    }
+void drop(int clientSocket, char* auth) {
+    char studID[10];
     char courseID[10];
 
-    send(clientSocket, "Enter the Course ID\n", strlen("Enter the Course ID\n"), 0);
+    strcpy(studID, auth);
+
+    struct enroll e;
+    struct course course_record;
+
+    // Initialize the enroll structure
+    memset(&e, 0, sizeof(struct enroll));
+
+    int sfound = 0, cfound = 0;
+
+    send(clientSocket, "Enter the Course ID to Drop\n", strlen("Enter the Course ID to Drop\n"), 0);
     int bytesRead = recv(clientSocket, courseID, sizeof(courseID) - 1, 0);
     if (bytesRead <= 0) {
-        perror("Error while receiving Login Id");
-        return ;
+        perror("Error while receiving Course ID");
+        return;
     }
     courseID[bytesRead] = '\0';
-    int found = 0;
 
-    // Apply mandatory file lock
-    if (flock(fd, LOCK_EX) == -1) {
-        perror("Error applying lock");
-        close(fd);
+    int fd1 = open("enrollment.txt", O_RDWR); // Open the file for read and write
+    int fd2;
+
+    if (fd1 == -1) {
+        perror("Error opening the enrollment file");
         return;
     }
 
-    // Search for the course with the matching ID
-    while (read(fd, &course_record, sizeof(struct course)) > 0) {
-        if (strcmp(courseID, course_record.course_id) == 0) {
+    while (read(fd1, &e, sizeof(struct enroll)) > 0) {
+        if (strcmp(studID, e.stud_id) == 0) {
+            for (int i = 0; i < 2; i++) {
+                if (strcmp(e.course_id[i], courseID) == 0) {
+                    // Remove the enrolled course
+                    memset(e.course_id[i], 0, sizeof(e.course_id[i]));
+
+                    lseek(fd1, -sizeof(struct enroll), SEEK_CUR);
+                    if (write(fd1, &e, sizeof(struct enroll)) == -1) {
+                        perror("Error writing to the enrollment file");
+                        send(clientSocket, "Error Updating enrollment.txt\n", strlen("Error Updating enrollment.txt\n"), 0);
+                        return;
+                    }
+
+                    sfound = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (sfound) {
+        fd2 = open("course.txt", O_RDWR); // Open the course file for read and write
+
+        if (fd2 == -1) {
+            perror("Error opening the course file");
+            close(fd1);
+            return;
+        }
+
+        while (read(fd2, &course_record, sizeof(struct course)) > 0) {
+            if (strcmp(courseID, course_record.course_id) == 0) {
+                cfound = 1;
+                break;
+            }
+        }
+
+        if (cfound) {
+            // Increment available seats
+            int total_seats = atoi(course_record.total_seats);
+            int avail_seats = atoi(course_record.avail_seats);
+
+            if (avail_seats < total_seats) {
+                avail_seats++;
+                snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
+
+                // Seek back to the beginning of the course record
+                lseek(fd2, -sizeof(struct course), SEEK_CUR);
+
+                // Write the updated course record back to the file
+                if (write(fd2, &course_record, sizeof(struct course)) == -1) {
+                    perror("Error writing to the course file");
+                    close(fd1);
+                    close(fd2);
+                    return;
+                } else {
+                    // Send a "drop successful" message
+                    send(clientSocket, "Course dropped successfully. Available seats updated.\n", strlen("Course dropped successfully. Available seats updated.\n"), 0);
+                }
+            } else {
+            
+                send(clientSocket, "Can't drop the course. No available seats.\n", strlen("Can't drop the course. No available seats.\n"), 0);
+            }
+        } else {
+            send(clientSocket, "Course not found.\n", strlen("Course not found.\n"), 0);
+        }
+    } else {
+        send(clientSocket, "Student has not enrolled for the respective course\n", strlen("Student has not enrolled for the respective course\n"), 0);
+    }
+
+    // Close the files
+    close(fd1);
+    close(fd2);
+}
+
+
+
+
+/*-----------------------------VIEW ENROLLED COURSES-----------------------------------------------------------------------------*/
+
+void viewEn(int clientSocket,char* auth){
+    char studID[10];
+
+
+    strcpy(studID,auth);
+    struct enroll e;
+    memset(e.stud_id,0,sizeof(e.stud_id));
+    memset(e.course_id[0],'\0',sizeof(e.course_id[0]));
+    memset(e.course_id[1],'\0',sizeof(e.course_id[1]));
+
+    int fd1 = open("enrollment.txt", O_RDWR | O_CREAT, 0666); // Open the file in append mode
+
+    if (fd1 == -1) {
+        perror("Error opening the file");
+        return ;
+    }
+    int found = 0;
+    char enrolledCoursesBuffer[1024]; // Adjust the buffer size as needed
+    char* bufferPtr = enrolledCoursesBuffer;
+    
+    while (read(fd1, &e, sizeof(struct enroll)) > 0) {
+        if (strcmp(studID, e.stud_id) == 0) {
             found = 1;
+            strcpy(bufferPtr, "Enrolled Courses:\n");
+            bufferPtr += strlen("Enrolled Courses:\n");
+            for (int i = 0; i < 2; i++) {
+                if (strcmp(e.course_id[i], "") != 0) {
+                    strcpy(bufferPtr, e.course_id[i]);
+                    bufferPtr += strlen(e.course_id[i]);
+                    strcpy(bufferPtr, "\n");
+                    bufferPtr += 1;
+                }
+            }
             break;
         }
     }
-
-    if (found) {
-         // Increment available seats
-        int total_seats = atoi(course_record.total_seats);
-        int avail_seats = atoi(course_record.avail_seats);
-
-        if (avail_seats < total_seats) {
-            avail_seats++;
-            snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
-
-            // Seek back to the beginning of the course record
-            lseek(fd, -sizeof(struct course), SEEK_CUR);
-
-            // Write the updated course record back to the file
-            if (write(fd, &course_record, sizeof(struct course)) == -1) {
-                perror("Error writing to the file");
-            }else {
-                // Send a "drop successful" message
-                send(clientSocket, "Course dropped successfully. Available seats updated.\n", strlen("Course dropped successfully. Available seats updated.\n"), 0);
-            }
-        } else {
-            send(clientSocket, "No more available seats for this course.\n", strlen("No more available seats for this course.\n"), 0);
-        }
-    } else {
-        send(clientSocket, "Course not found.\n", strlen("Course not found.\n"), 0);
+    
+    if (!found) {
+        strcpy(bufferPtr, "Student not found or not enrolled in any courses.\n");
     }
 
-    // Release the lock before closing the file
-    flock(fd, LOCK_UN);
-
-    // Close the file
-    close(fd);
+    send(clientSocket, enrolledCoursesBuffer, strlen(enrolledCoursesBuffer), 0);
+    
+    close(fd1);
 }
+
+
+
+
+
+
 
 
 
@@ -201,7 +442,7 @@ void drop(int clientSocket) {
 
 
 
-int updatePassword(int clientSocket) {
+int updatePassword(int clientSocket, char* auth) {
     char buff[1024];
     int fd = open("student.txt", O_RDWR); // Open the file for both reading and writing
     if (fd == -1) {
@@ -209,21 +450,15 @@ int updatePassword(int clientSocket) {
         return false;
     }
 
+    char studID[10];
     int found = 0;
-    char studID[50];
+    strcpy(studID,auth);
     char newPass[10];
     struct student s;
 
-    memset(studID, 0, sizeof(studID));
+    
 
-    send(clientSocket, "Enter Your Student ID: ", strlen("Enter Your Student ID: "), 0);
-    int bytesRead = recv(clientSocket, studID, sizeof(studID) - 1, 0);
-    if (bytesRead <= 0) {
-        perror("Error while receiving Login ID");
-        close(fd); // Close the file
-        return false;
-    }
-    studID[bytesRead] = '\0';
+    
 
     // Search for the faculty with the matching login ID
     while (read(fd, &s, sizeof(struct student)) > 0) {
@@ -236,7 +471,7 @@ int updatePassword(int clientSocket) {
     if (found) {
         // Send a prompt for the new password
         send(clientSocket, "Enter New Password: ", strlen("Enter New Password: "), 0);
-        bytesRead = recv(clientSocket, newPass, sizeof(newPass) - 1, 0);
+        int bytesRead = recv(clientSocket, newPass, sizeof(newPass) - 1, 0);
         if (bytesRead <= 0) {
             perror("Error while receiving new password");
             close(fd); // Close the file
@@ -284,7 +519,7 @@ int updatePassword(int clientSocket) {
 /*---------------------------STUDENT AUTHENTICATION-----------------------------------------------------------------------------------------------------------------------------------*/
 
 
-int student_Authentication(int client_socket) {
+char* student_Authentication(int client_socket) {
     char loginId[100];
     char pass[100];
 
@@ -325,40 +560,42 @@ int student_Authentication(int client_socket) {
     int fd = open("student.txt", O_RDONLY);
     if (fd == -1) {
         perror("Error opening the file");
-        return false;
+        return NULL;
+        
     }
     int found = 0;
+    char* loginIdCopy = NULL;
 
-     while (read(fd, &s, sizeof(struct student)) > 0) {
-        if (strcmp(loginId, s.stud_id) == 0) {
-            if(strcmp(pass,s.password ) ==0){
-            
-                found = 1;
-                break;
+    while (read(fd, &s, sizeof(struct student)) > 0) {
+        if (strcmp(loginId, s.stud_id) == 0 && strcmp(pass, s.password) == 0) {
+            // Allocate memory for the student's ID
+            loginIdCopy = (char*)malloc(strlen(loginId) + 1);
+            if (loginIdCopy != NULL) {
+                strcpy(loginIdCopy, loginId);
             }
+            found = 1;
+            break;
         }
     }
 
-    if(found){
-        
-        send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
-        close(fd);
-        return true;
-    }else{
-        
-        send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
-        close(fd);
-        close(client_socket);
-        return false;
+    // Close the file
+    close(fd);
 
+    if (found) {
+        return loginIdCopy; // Return the student ID
+    } else {
+        free(loginIdCopy); // Free the allocated memory
+        return NULL; // Return NULL to indicate authentication failure
     }
 
+    
+        
     
 }
 
 /*-----------------------------STUDENT FUNCTIONALITY-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-int student_Fun(int client_socket) {
+int student_Fun(int client_socket,char* auth) {
     // You can implement admin-specific functionality here
     // This function will be called after successful admin authentication
     // Add your code to handle admin tasks, menu options, etc.
@@ -389,22 +626,22 @@ int student_Fun(int client_socket) {
         
             case 2:
                 //Enroll New Course
-                enroll(client_socket); 
+                enroll(client_socket,auth); 
                 break;
 
             case 3:
                 //Drop Course
-                drop(client_socket);
+                drop(client_socket,auth);
 
                 break;
 
             case 4:
                 //View Enrolled Course Details
-                
+                viewEn(client_socket,auth);
                 break;
             case 5:
                 //Change Password
-                updatePassword(client_socket);
+                updatePassword(client_socket,auth);
 
                 break;
             case 6:

@@ -100,20 +100,39 @@ void handleClient(int client_socket) {
             case 1:
                 // Handle Admin role
                 // Implement the admin-related functionality here
-				if (admin_Authentication(client_socket)) {
-        		        admin_Fun(client_socket);
+				char *auth1 = admin_Authentication(client_socket);
+                if (auth1 != NULL){
+                    send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
+                    admin_Fun(client_socket,auth1);
+                }else{
+                
+                    send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
+                    close(client_socket);
                 }
                 break;
             case 2:
-                if (faculty_Authentication(client_socket)) {
-        			faculty_Fun(client_socket);
+                char *auth2 = faculty_Authentication(client_socket);
+                if (auth2 != NULL){
+                    send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
+                    faculty_Fun(client_socket,auth2);
+                }else{
+
+                    send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
+                    close(client_socket);
                 }
+                
                 break;
             case 3:
                 // Handle Student role
                 // Implement the student-related functionality here
-                 if (student_Authentication(client_socket)) {
-        			student_Fun(client_socket);
+                char *auth = student_Authentication(client_socket);
+                if (auth != NULL){
+                    send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
+                    student_Fun(client_socket,auth);
+                }else{
+                    
+                    send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
+                    close(client_socket);
                 }
                 break;
             case 4:
@@ -123,7 +142,7 @@ void handleClient(int client_socket) {
 			    printf("Client gets Exited");
 			    close(client_socket);
 			return;
-                
+            
             default:
                 send(client_socket, "Invalid choice. Try again.\n", strlen("Invalid choice. Try again.\n"), 0);
                 break;

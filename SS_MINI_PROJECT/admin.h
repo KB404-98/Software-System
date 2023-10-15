@@ -537,7 +537,7 @@ int updateFacDetails(int clientSocket){
 
 /*--------------------------------AUTHENTICATE ADMIN------------------------------------------------------------------------------------------------------------------------------------*/
 
-int admin_Authentication(int client_socket) {
+char* admin_Authentication(int client_socket) {
     char username[100];
     char pass[100];
 
@@ -575,15 +575,15 @@ int admin_Authentication(int client_socket) {
 
     // Compare the received username and password with stored credentials
     if (strcmp(username, adminCred.username) == 0 && strcmp(pass, adminCred.pass) == 0) {
+        char* loginIdCopy = (char*)malloc(strlen(username) + 1);
+                if (loginIdCopy != NULL) {
+                    strcpy(loginIdCopy,username);
+                    return loginIdCopy;
+                }
         // Authentication successful
-        send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
-        
-    } else {
-        // Authentication failed
-        send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
-        close(client_socket);
         
     }
+    return NULL;
 }
 
 
@@ -594,7 +594,7 @@ int admin_Authentication(int client_socket) {
 /*---------------------------------ADMIN FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-int admin_Fun(int client_socket) {
+int admin_Fun(int client_socket,char* auth) {
     // You can implement admin-specific functionality here
     // This function will be called after successful admin authentication
     // Add your code to handle admin tasks, menu options, etc.

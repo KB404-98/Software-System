@@ -16,7 +16,7 @@
 
 
 /*--------------------------------VIEW OFFERING COURSES--------------------------------------------------------------------------------------------------------------------------------------*/
-int viewOffC(int clientSocket) {
+int viewOffC(int clientSocket,char* auth) {
 
     char duff[1024];
     int fd = open("course.txt", O_RDONLY);
@@ -32,16 +32,10 @@ int viewOffC(int clientSocket) {
 
     memset(loginID,0,sizeof(loginID));
     
-    send(clientSocket, "Enter the Login Id of the Professor\n", strlen("Enter the Login Id of the Professor\n"), 0);
-    int bytesRead = recv(clientSocket, loginID, sizeof(loginID) - 1, 0);
-    if (bytesRead <= 0) {
-        perror("Error while receiving Login Id");
-        return false;
-    }
-    loginID[bytesRead] = '\0';
+    strcpy(loginID,auth);
  
     send(clientSocket, "Enter the Course ID\n", strlen("Enter the Course ID\n"), 0);
-    bytesRead = recv(clientSocket, courseID, sizeof(courseID) - 1, 0);
+    int bytesRead = recv(clientSocket, courseID, sizeof(courseID) - 1, 0);
     if (bytesRead <= 0) {
         perror("Error while receiving Login Id");
         return false;
@@ -79,7 +73,7 @@ int viewOffC(int clientSocket) {
 
 /*--------------------------------ADD NEW COURCES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-int addNewC(int clientSocket) {
+int addNewC(int clientSocket,char* auth) {
     struct course c;
 
     // Prompt and receive the course Id
@@ -92,13 +86,9 @@ int addNewC(int clientSocket) {
     c.course_id[bytesRead] = '\0';
 
    
-    send(clientSocket, "Enter Professor ID\n", strlen("Enter Professor ID\n"), 0);
-    bytesRead = recv(clientSocket, c.prof_id, sizeof(c.prof_id) - 1, 0);
-    if (bytesRead <= 0) {
-        perror("Error while receiving Login Id");
-        return false;
-    }
-    c.prof_id[bytesRead] = '\0';
+
+   
+    strcpy(c.prof_id,auth);
     
     send(clientSocket, "Enter Course Name\n", strlen("Enter Course Name\n"), 0);
     bytesRead = recv(clientSocket, c.course_name, sizeof(c.course_name) - 1, 0);
@@ -183,7 +173,7 @@ int addNewC(int clientSocket) {
 
 /*---------------------------------UPDATE COURSE DETAILS-------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-int updateCrsDtls(int clientSocket){
+int updateCrsDtls(int clientSocket,char* auth){
 
     struct course my_course, temp;
     int fd = open("course.txt", O_RDWR, 0644); // Open in read-only mode
@@ -306,7 +296,7 @@ int updateCrsDtls(int clientSocket){
 /*---------------------------------UPDATE PASSWORD--------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-int updatePass(int clientSocket) {
+int updatePass(int clientSocket,char* auth) {
     char buff[1024];
     int fd = open("faculty.txt", O_RDWR); // Open the file for both reading and writing
     if (fd == -1) {
@@ -321,14 +311,7 @@ int updatePass(int clientSocket) {
 
     memset(loginID, 0, sizeof(loginID));
 
-    send(clientSocket, "Enter Your Login ID: ", strlen("Enter Your Login ID: "), 0);
-    int bytesRead = recv(clientSocket, loginID, sizeof(loginID) - 1, 0);
-    if (bytesRead <= 0) {
-        perror("Error while receiving Login ID");
-        close(fd); // Close the file
-        return false;
-    }
-    loginID[bytesRead] = '\0';
+   strcpy(loginID,auth);
 
     // Search for the faculty with the matching login ID
     while (read(fd, &f, sizeof(struct faculty)) > 0) {
@@ -341,7 +324,7 @@ int updatePass(int clientSocket) {
     if (found) {
         // Send a prompt for the new password
         send(clientSocket, "Enter New Password: ", strlen("Enter New Password: "), 0);
-        bytesRead = recv(clientSocket, newPass, sizeof(newPass) - 1, 0);
+        int bytesRead = recv(clientSocket, newPass, sizeof(newPass) - 1, 0);
         if (bytesRead <= 0) {
             perror("Error while receiving new password");
             close(fd); // Close the file
@@ -384,7 +367,7 @@ int updatePass(int clientSocket) {
 
 /*---------------------------------PROFESSOR AUTHENTICATION------------------------------------------------------------------------------------------------------------------------------------*/
 
-int faculty_Authentication(int client_socket) {
+char* faculty_Authentication(int client_socket) {
     char loginId[100];
     char pass[100];
 
@@ -429,29 +412,21 @@ int faculty_Authentication(int client_socket) {
     }
     int found = 0;
 
-     while (read(fd, &f, sizeof(struct faculty)) > 0) {
+    while (read(fd, &f, sizeof(struct faculty)) > 0) {
         if (strcmp(loginId, f.login_id) == 0) {
             if(strcmp(pass,f.password ) ==0){
             
-                found = 1;
-                break;
+                char* loginIdCopy = (char*)malloc(strlen(loginId) + 1);
+                if (loginIdCopy != NULL) {
+                    strcpy(loginIdCopy,loginId);
+                    close(fd);
+                    return loginIdCopy;
+                }
             }
         }
     }
 
-    if(found){
-        
-        send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
-        close(fd);
-        return true;
-    }else{
-        
-        send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
-        close(fd);
-        close(client_socket);
-        return false;
-
-    }
+    return NULL;
 
     
 }
@@ -459,16 +434,77 @@ int faculty_Authentication(int client_socket) {
 
 
 
+/*-------------------------------------REMOVE COURSE------------------------------------------------------------------------------------*/
+int removeCourse(int clientSocket,char* auth) {
+
+    struct course my_course, temp;
+    int openFD = open("course.txt", O_RDWR, 0644); // Open in read-only mode
+
+    if (openFD == -1)
+    {
+        perror("Error opening file");
+        return 0;
+    }
+    bool found = false; // Initialize found to false
+    char buffer[1024];  // Declare buffer for sending data
+    send(clientSocket, "Enter Course ID to Remove: ", strlen("Enter Course ID to Remove: "), 0);
+    int readResult = read(clientSocket, my_course.course_id, sizeof(my_course.course_id) - 1);
+    
+    if (readResult <= 0)
+    {
+        send(clientSocket, "Error receiving faculty ID from server", strlen("Error receiving faculty ID from server"), 0);
+        return 0;
+    }
+    my_course.course_id[readResult] = '\0';
+    
+    // Reset the file pointer to the beginning of the file
+    lseek(openFD, 0, SEEK_SET);
+    strcpy(my_course.prof_id,auth);
+    // Loop to search for the student in the file
+    while (read(openFD, &temp, sizeof(temp)) > 0)
+    {
+        if((strcmp(my_course.course_id, temp.course_id) == 0) && (strcmp(my_course.prof_id, temp.prof_id) == 0))
+        { // Compare the student IDs
+            found = true;
+            
+            break;
+        }
+    }
+    
+    lseek(openFD,-sizeof(struct course),SEEK_CUR);
+    size_t bytesWrite=write(openFD,&temp,sizeof(temp));
+    if(bytesWrite==-1){
+        perror("Error while removing course");
+        close(openFD);
+        return 0;
+    }
+    if (found)
+    {
+        send(clientSocket, "Removed the course from catalog\n", strlen("Removed the course from catalog\n"), 0);
+        close(openFD);
+        return 1;
+    }
+    else
+    {
+        send(clientSocket, "Course not found\n", strlen("Course not found\n"), 0);
+        close(openFD);
+        return 0;
+    }
+    return 0; 
+}
+
+
+
 /*-------------------------------------FACULTY FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-int faculty_Fun(int client_socket) {
+int faculty_Fun(int client_socket, char* auth) {
     // You can implement admin-specific functionality here
     // This function will be called after successful admin authentication
     // Add your code to handle admin tasks, menu options, etc.
     // For example, sending admin menu options and processing admin tasks
 
-    char faculty_Menu[] = "\nFaculty Menu:\n1. Add New Course\n2. View Offering Course\n3. Update Course Details\n4. Change Password\n5. Exit\nEnter Choice\n";
+    char faculty_Menu[] = "\nFaculty Menu:\n1. Add New Course\n2. View Offering Course\n3. Update Course Details\n4. Change Password\n5. Remove Course\n6. Exit\nEnter Choice\n";
 
     while (1) {
         send(client_socket, faculty_Menu, strlen(faculty_Menu), 0);
@@ -487,27 +523,30 @@ int faculty_Fun(int client_socket) {
         switch (choice) {
             case 1:
                  // View student details
-                addNewC(client_socket);
+                addNewC(client_socket,auth);
                 
                 break;
 
             case 2:
-                viewOffC(client_socket); 
+                viewOffC(client_socket,auth); 
                 break;
 
             case 3:
                 
-                updateCrsDtls(client_socket);
+                updateCrsDtls(client_socket,auth);
 
                 break;
 
             case 4:
                 
-                updatePass(client_socket);
+                updatePass(client_socket,auth);
 
                 break;
-
             case 5:
+                removeCourse(client_socket,auth);
+
+                break;
+            case 6:
                 // Exit admin functionality
                 return true;
 
