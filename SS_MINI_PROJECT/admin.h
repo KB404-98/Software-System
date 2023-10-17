@@ -22,6 +22,8 @@
 int addFaculty(int clientSocket) {
     struct faculty f;
 
+
+    memset(f.login_id,0,sizeof(f.login_id));
     // Prompt and receive the Login Id
     send(clientSocket, "Enter the Login Id of the Professor\n", strlen("Enter the Login Id of the Professor\n"), 0);
     int bytesRead = recv(clientSocket, f.login_id, sizeof(f.login_id) - 1, 0);
@@ -30,10 +32,14 @@ int addFaculty(int clientSocket) {
         return false;
     }
     f.login_id[bytesRead] = '\0';
-
     // Set the Password to "1234"
+
+    memset(f.password,0,sizeof(f.password));
     strcpy(f.password, "5678");
 
+
+    
+    memset(f.dept,0,sizeof(f.dept));
     // Prompt and receive the Department
     send(clientSocket, "Enter the Department of the Professor\n", strlen("Enter the Department of the Professor\n"), 0);
     bytesRead = recv(clientSocket, f.dept, sizeof(f.dept) - 1, 0);
@@ -43,6 +49,8 @@ int addFaculty(int clientSocket) {
     }
     f.dept[bytesRead] = '\0';
 
+
+    memset(f.name,0,sizeof(f.name));
     // Prompt and receive the Name
     send(clientSocket, "Enter the Name of the Professor\n", strlen("Enter the Name of the Professor\n"), 0);
     bytesRead = recv(clientSocket, f.name, sizeof(f.name) - 1, 0);
@@ -52,6 +60,8 @@ int addFaculty(int clientSocket) {
     }
     f.name[bytesRead] = '\0';
 
+    
+    memset(f.age,0,sizeof(f.age));
     // Prompt and receive the Age
     send(clientSocket, "Enter the Age of Professor\n", strlen("Enter the Age of Professor\n"), 0);
     bytesRead = recv(clientSocket, f.age, sizeof(f.age) - 1, 0);
@@ -61,6 +71,9 @@ int addFaculty(int clientSocket) {
     }
     f.age[bytesRead] = '\0';
 
+    
+        
+    memset(f.email,0,sizeof(f.email));
     // Prompt and receive the Email
     send(clientSocket, "Enter the Email of the Professor\n", strlen("Enter the Email of the Professor\n"), 0);
     bytesRead = recv(clientSocket, f.email, sizeof(f.email) - 1, 0);
@@ -162,6 +175,8 @@ int viewFacultyDetails(int clientSocket) {
 
 int addStudent(int clientSocket) {
     struct student s;
+    
+    memset(s.stud_id,0,sizeof(s.stud_id));
 
     // Prompt and receive the Login Id
     send(clientSocket, "Enter the Login Id of the student you want to add\n", strlen("Enter the Login Id of the student you want to add\n"), 0);
@@ -172,9 +187,11 @@ int addStudent(int clientSocket) {
     }
     s.stud_id[bytesRead] = '\0';
 
+    memset(s.password,0,sizeof(s.password));
     // Set the Password to "1234"
     strcpy(s.password, "1234");
 
+    memset(s.dept,0,sizeof(s.dept));
     // Prompt and receive the Department
     send(clientSocket, "Enter the Department of the student you want to add\n", strlen("Enter the Department of the student you want to add\n"), 0);
     bytesRead = recv(clientSocket, s.dept, sizeof(s.dept) - 1, 0);
@@ -184,6 +201,8 @@ int addStudent(int clientSocket) {
     }
     s.dept[bytesRead] = '\0';
 
+
+    memset(s.name,0,sizeof(s.name));
     // Prompt and receive the Name
     send(clientSocket, "Enter the Name of the student you want to add\n", strlen("Enter the Name of the student you want to add\n"), 0);
     bytesRead = recv(clientSocket, s.name, sizeof(s.name) - 1, 0);
@@ -193,6 +212,8 @@ int addStudent(int clientSocket) {
     }
     s.name[bytesRead] = '\0';
 
+
+     memset(s.age,0,sizeof(s.age));
     // Prompt and receive the Age
     send(clientSocket, "Enter the Age of the student you want to add\n", strlen("Enter the Age of the student you want to add\n"), 0);
     bytesRead = recv(clientSocket, s.age, sizeof(s.age) - 1, 0);
@@ -201,6 +222,9 @@ int addStudent(int clientSocket) {
         return false;
     }
     s.age[bytesRead] = '\0';
+
+
+     memset(s.email,0,sizeof(s.email));
 
     // Prompt and receive the Email
     send(clientSocket, "Enter the Email of the student you want to add\n", strlen("Enter the Email of the student you want to add\n"), 0);
@@ -594,7 +618,7 @@ char* admin_Authentication(int client_socket) {
 /*---------------------------------ADMIN FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
-int admin_Fun(int client_socket,char* auth) {
+int admin_Fun(int client_socket) {
     // You can implement admin-specific functionality here
     // This function will be called after successful admin authentication
     // Add your code to handle admin tasks, menu options, etc.

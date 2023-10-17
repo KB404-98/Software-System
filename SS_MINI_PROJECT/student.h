@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/file.h>
 #include <sys/socket.h>
+//#include "structure.h"
 
 /*---------------------------VIEW ALL COURSES-----------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -66,12 +67,11 @@ void enroll(int clientSocket,char* auth) {
     strcpy(studID,auth);
 
     struct enroll e;
-
-   
     struct course course_record;
-     memset(e.stud_id,0,sizeof(e.stud_id));
-     memset(e.course_id[0],'\0',sizeof(e.course_id[0]));
-     memset(e.course_id[1],'\0',sizeof(e.course_id[1]));
+
+    memset(e.stud_id,0,sizeof(e.stud_id));
+    memset(e.course_id[0],'\0',sizeof(e.course_id[0]));
+    memset(e.course_id[1],'\0',sizeof(e.course_id[1]));
 
 
     int cfound=0, sfound=0;
@@ -531,7 +531,7 @@ char* student_Authentication(int client_socket) {
     ssize_t bytesRead = recv(client_socket, loginId, sizeof(loginId), 0);
     if (bytesRead <= 0) {
         close(client_socket);
-        return false;
+        return NULL;
     }
     if (loginId[bytesRead - 1] == '\n') {
         loginId[bytesRead - 1] = '\0';
@@ -547,7 +547,7 @@ char* student_Authentication(int client_socket) {
     bytesRead = recv(client_socket, pass, sizeof(pass), 0);
     if (bytesRead <= 0) {
         close(client_socket);
-        return false;
+        return NULL;
     }
     if (pass[bytesRead - 1] == '\n') {
         pass[bytesRead - 1] = '\0';

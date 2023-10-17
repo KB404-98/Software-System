@@ -103,7 +103,7 @@ void handleClient(int client_socket) {
 				char *auth1 = admin_Authentication(client_socket);
                 if (auth1 != NULL){
                     send(client_socket, "Authentication successful\n", strlen("Authentication successful\n"), 0);
-                    admin_Fun(client_socket,auth1);
+                    admin_Fun(client_socket);
                 }else{
                 
                     send(client_socket, "Authentication failed. Exiting.\n", strlen("Authentication failed. Exiting.\n"), 0);
