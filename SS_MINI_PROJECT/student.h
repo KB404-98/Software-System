@@ -34,23 +34,26 @@ int viewAllCourses(int clientSocket) {
     // Capture the course details in the buffer
     ssize_t bytes_read;
     while ((bytes_read = read(fd, &cr, sizeof(struct course)) > 0)) {
-        char course_str[512];  // Adjust the size as needed for a single course
-        snprintf(course_str, sizeof(course_str), "Course ID: %s\n"
-                                                "Professor ID: %s\n"
-                                                "Course Name: %s\n"
-                                                "Department: %s\n"
-                                                "Credit: %s\n"
-                                                "Total Seats: %s\n"
-                                                "Available Seats: %s\n\n",
-                 cr.course_id, cr.prof_id, cr.course_name,
-                 cr.dept, cr.course_credit, cr.total_seats, cr.avail_seats);
-        strcat(buffer, course_str);
+        // Check if the course is active (active field is "1")
+        if (strcmp(cr.active, "1") == 0) {
+            char course_str[512];  // Adjust the size as needed for a single course
+            snprintf(course_str, sizeof(course_str), "Course ID: %s\n"
+                                                    "Professor ID: %s\n"
+                                                    "Course Name: %s\n"
+                                                    "Department: %s\n"
+                                                    "Credit: %s\n"
+                                                    "Total Seats: %s\n"
+                                                    "Available Seats: %s\n\n",
+                     cr.course_id, cr.prof_id, cr.course_name,
+                     cr.dept, cr.course_credit, cr.total_seats, cr.avail_seats);
+            strcat(buffer, course_str);
+        }
     }
     // Close the file using system call
     close(fd);
 
-    // Now, 'buffer' contains all course details as a single string
-   send(clientSocket, buffer, strlen(buffer), 0);
+    // Now, 'buffer' contains details of active courses as a single string
+    send(clientSocket, buffer, strlen(buffer), 0);
 
     return 0;
 }
@@ -96,7 +99,7 @@ void enroll(int clientSocket,char* auth) {
         }
 
         while (read(fd2, &course_record, sizeof(struct course)) > 0) {
-            if (strcmp(courseID,course_record.course_id ) == 0) {
+            if ((strcmp(courseID,course_record.course_id ) == 0) && (strcmp("1",course_record.active) == 0)) {
                  cfound = 1;
                  break;
              }  
@@ -147,7 +150,9 @@ void enroll(int clientSocket,char* auth) {
         	{
                  // Enroll the student (decrement available seats)
                  avail_seats--;
-                 snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
+
+                memset(course_record.avail_seats,0,sizeof(course_record.avail_seats));
+                snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
 
                 // Seek back to the beginning of the course record
                 lseek(fd2, -sizeof(struct course), SEEK_CUR);
@@ -218,6 +223,8 @@ void enroll(int clientSocket,char* auth) {
 
         			 // Enroll the student (decrement available seats)
                 		avail_seats--;
+                        memset(course_record.avail_seats,0,sizeof(course_record.avail_seats));
+
                 		snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
 
                			 // Seek back to the beginning of the course record
@@ -348,6 +355,8 @@ void drop(int clientSocket, char* auth) {
 
             if (avail_seats < total_seats) {
                 avail_seats++;
+
+                memset(course_record.avail_seats,0,sizeof(course_record.avail_seats));
                 snprintf(course_record.avail_seats, sizeof(course_record.avail_seats), "%d", avail_seats);
 
                 // Seek back to the beginning of the course record
@@ -443,6 +452,7 @@ void viewEn(int clientSocket,char* auth){
 
 
 int updatePassword(int clientSocket, char* auth) {
+    
     char buff[1024];
     int fd = open("student.txt", O_RDWR); // Open the file for both reading and writing
     if (fd == -1) {
@@ -460,7 +470,7 @@ int updatePassword(int clientSocket, char* auth) {
 
     
 
-    // Search for the faculty with the matching login ID
+    // Search for the student with the matching student ID
     while (read(fd, &s, sizeof(struct student)) > 0) {
         if (strcmp(studID, s.stud_id) == 0) {
             found = 1;
@@ -479,6 +489,7 @@ int updatePassword(int clientSocket, char* auth) {
         }
         newPass[bytesRead] = '\0';
 
+        memset(s.password,0,sizeof(s.password));
         // Update the Student password
         strcpy(s.password, newPass);
 

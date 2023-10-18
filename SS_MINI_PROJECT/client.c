@@ -28,6 +28,7 @@ int main() {
         exit(1);
     }
     printf("You are Now Connected to the server\n");
+    fflush(stdout); 
     while (1) {
         // Receive data from the server
         char buffer[1024];
@@ -42,10 +43,12 @@ int main() {
             break;
         // Process and display received data
         printf(">%s", buffer);
+        fflush(stdout); 
 
         // Send a response (optional)
         char message[1024];
         printf(">");
+        fflush(stdout); 
         memset(message, 0, sizeof(message));
         fgets(message, sizeof(message), stdin);
 

@@ -14,6 +14,8 @@
 // #include "admin.h"
 
 /*--------------------------------VIEW OFFERING COURSES--------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*
 int viewOffC(int clientSocket, char *auth)
 {
 
@@ -48,10 +50,14 @@ int viewOffC(int clientSocket, char *auth)
     {
         if (strcmp(courseID, c.course_id) == 0)
         {
-            if (strcmp(loginID, c.prof_id) == 0)
+            if (strcmp(loginID, c.prof_id) == 0){
 
-                found = 1;
-            break;
+                if(strcmp(c.active,"1") == 0){
+
+                    found = 1;
+                    break;
+                }
+            }
         }
     }
     memset(duff, 0, sizeof(duff));
@@ -69,7 +75,50 @@ int viewOffC(int clientSocket, char *auth)
         send(clientSocket, "Course not found..\n", strlen("Course not found..\n"), 0);
         close(fd);
     }
+} 
+*/
+
+int viewOffC(int clientSocket, char *auth) {
+    char duff[4096];  // Adjust the size as needed
+    int fd = open("course.txt", O_RDONLY);
+    if (fd == -1) {
+        perror("Error opening the file");
+        return false;
+    }
+    int found = 0;
+    char loginID[10];
+    struct course c;
+
+    memset(loginID, 0, sizeof(loginID));
+
+    strcpy(loginID, auth);
+
+    // Initialize the buffer to store course details
+    memset(duff, 0, sizeof(duff));
+
+    // Search for courses offered by the professor
+    while (read(fd, &c, sizeof(struct course)) > 0) {
+        if (strcmp(loginID, c.prof_id) == 0 && strcmp(c.active, "1") == 0) {
+            // Construct course details and add to the buffer
+            sprintf(duff + strlen(duff), "\n--Course Details--\nCourse ID: %s\nCourse Name: %s\nDept: %s\nCourse Credit: %s\nTotal Seats: %s\nAvailable Seats: %s\n", c.course_id, c.course_name, c.dept, c.course_credit, c.total_seats, c.avail_seats);
+            found = 1;
+        }
+    }
+
+    close(fd);
+
+    if (found) {
+        // Send the course details to the client
+        send(clientSocket, duff, strlen(duff), 0);
+    } else {
+        send(clientSocket, "No courses found for the professor.\n", strlen("No courses found for the professor.\n"), 0);
+    }
+    return 0;
 }
+
+
+
+
 
 /*--------------------------------ADD NEW COURCES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -253,29 +302,49 @@ int updateCrsDtls(int clientSocket, char *auth)
         send(clientSocket, buffer, strlen(buffer), 0);
 
         struct course up_crs;
+
+        memset(up_crs.course_id,0,sizeof(up_crs.course_id));
         strcpy(up_crs.course_id, temp.course_id);
 
+
+        memset(up_crs.prof_id,0,sizeof(up_crs.prof_id));
         strcpy(up_crs.prof_id, temp.prof_id);
 
+        memset(up_crs.active,0,sizeof(up_crs.active));
+        strcpy(up_crs.active, temp.active);
+
+        memset(up_crs.course_name,0,sizeof(up_crs.course_name));
         send(clientSocket, "Enter Course Name to update: ", strlen("Enter Course Name to update: "), 0);
         readResult = read(clientSocket, up_crs.course_name, sizeof(up_crs.course_name) - 1);
         up_crs.course_name[readResult] = '\0';
 
+        
+        memset(up_crs.dept,0,sizeof(up_crs.dept));
         send(clientSocket, "Enter Department to update: ", strlen("Enter Department to update: "), 0);
         readResult = read(clientSocket, up_crs.dept, sizeof(up_crs.dept) - 1);
         up_crs.dept[readResult] = '\0';
 
+        
+        memset(up_crs.course_credit,0,sizeof(up_crs.course_credit));
         send(clientSocket, "Enter Credit to update: ", strlen("Enter Credit to update: "), 0);
         readResult = read(clientSocket, up_crs.course_credit, sizeof(up_crs.course_credit) - 1);
         up_crs.course_credit[readResult] = '\0';
 
+        
+        
+        memset(up_crs.total_seats,0,sizeof(up_crs.total_seats));
         send(clientSocket, "Enter Total Seats to update: ", strlen("Enter Total Seats to update: "), 0);
         readResult = read(clientSocket, up_crs.total_seats, sizeof(up_crs.total_seats) - 1);
         up_crs.total_seats[readResult] = '\0';
 
+        
+        
+        memset(up_crs.avail_seats,0,sizeof(up_crs.avail_seats));
         send(clientSocket, "Enter Available Seats to update: ", strlen("Enter Available Seats to update: "), 0);
         readResult = read(clientSocket, up_crs.avail_seats, sizeof(up_crs.avail_seats) - 1);
         up_crs.avail_seats[readResult] = '\0';
+
+
 
         lseek(fd, -sizeof(struct course), SEEK_CUR); //// Move the file pointer back to the beginning of the current record
         write(fd, &up_crs, sizeof(up_crs));          // Overwrite the entire record with the updated data
@@ -349,7 +418,8 @@ int updatePass(int clientSocket, char *auth)
             return false;
         }
         newPass[bytesRead] = '\0';
-
+        
+        memset(f.password, 0, sizeof(f.password));
         // Update the faculty's password
         strcpy(f.password, newPass);
 
@@ -373,6 +443,10 @@ int updatePass(int clientSocket, char *auth)
         close(fd); // Close the file
     }
 }
+
+
+
+
 
 /*---------------------------------PROFESSOR AUTHENTICATION------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -452,64 +526,92 @@ char *faculty_Authentication(int client_socket)
     return NULL;
 }
 
-/*-------------------------------------REMOVE COURSE------------------------------------------------------------------------------------*/
-int removeCourse(int clientSocket, char *auth)
-{
 
+
+
+
+
+/*-------------------------------------REMOVE COURSE------------------------------------------------------------------------------------*/
+void removeCourse(int clientSocket, char *auth)
+{
     struct course my_course, temp;
-    int openFD = open("course.txt", O_RDWR, 0644); // Open in read-only mode
+    
+    int openFD = open("course.txt", O_RDWR); // Open in read-write mode
 
     if (openFD == -1)
     {
         perror("Error opening file");
-        return 0;
+        return;
     }
+
     bool found = false; // Initialize found to false
     char buffer[1024];  // Declare buffer for sending data
+
     send(clientSocket, "Enter Course ID to Remove: ", strlen("Enter Course ID to Remove: "), 0);
     int readResult = read(clientSocket, my_course.course_id, sizeof(my_course.course_id) - 1);
 
     if (readResult <= 0)
     {
-        send(clientSocket, "Error receiving faculty ID from server", strlen("Error receiving faculty ID from server"), 0);
-        return 0;
+        send(clientSocket, "Error receiving course ID from server", strlen("Error receiving course ID from server"), 0);
+        close(openFD); // Close the file before returning
+        return;
     }
     my_course.course_id[readResult] = '\0';
 
     // Reset the file pointer to the beginning of the file
     lseek(openFD, 0, SEEK_SET);
     strcpy(my_course.prof_id, auth);
-    // Loop to search for the student in the file
+
+    // Loop to search for the course in the file
     while (read(openFD, &temp, sizeof(temp)) > 0)
     {
         if ((strcmp(my_course.course_id, temp.course_id) == 0) && (strcmp(my_course.prof_id, temp.prof_id) == 0))
-        { // Compare the student IDs
+        {
             found = true;
             lseek(openFD, -sizeof(struct course), SEEK_CUR);
-            strcpy(my_course.active,"0");
+            strcpy(temp.active, "0"); // Set the course as inactive
             size_t bytesWrite = write(openFD, &temp, sizeof(temp));
-            if (bytesWrite == -1)
+            
+            if (bytesWrite != sizeof(temp))
             {
-                perror("Error while removing course");
+                perror("Error while updating course");
                 close(openFD);
-                return 0;
+                return;
             }
+
+            struct enroll e;
+            int fd = open("enrollment.txt", O_RDWR); // Open in read-write mode
+            while (read(fd, &e, sizeof(struct enroll)) > 0) {
+                for (int i = 0; i < 2; i++) {
+                    if (strcmp(e.course_id[i], my_course.course_id) == 0) {
+                        // Remove the enrolled course
+                        memset(e.course_id[i], 0, sizeof(e.course_id[i]));
+
+                        lseek(fd, -sizeof(struct enroll), SEEK_CUR);
+                        if (write(fd, &e, sizeof(struct enroll)) == -1) {
+                            perror("Error writing to the enrollment file");
+                            send(clientSocket, "Error Updating enrollment.txt\n", strlen("Error Updating enrollment.txt\n"), 0);
+                            return;
+                        }
+                        break;
+                    }
+                }
+            }
+            
 
             send(clientSocket, "Removed the course from catalog\n", strlen("Removed the course from catalog\n"), 0);
             close(openFD);
-            return 1;
-
-            break;
+            return;
         }
     }
 
     if (!found)
     {
         send(clientSocket, "Course not found\n", strlen("Course not found\n"), 0);
-        close(openFD);
-        return 0;
     }
-    return 0;
+
+    close(openFD); // Close the file
+    return;
 }
 
 /*-------------------------------------FACULTY FUNCTIONALITY------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
